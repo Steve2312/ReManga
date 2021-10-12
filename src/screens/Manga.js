@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, View, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, StyleSheet, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image} from 'react-native';
 import MangaBackground from '../components/MangaBackground';
 import CachedImage from '../components/CachedImage';
 import Bookmark from '../components/Bookmark';
 import Button from '../components/Button';
+import ChapterService from '../services/ChapterService';
 
 import theme from '../theme';
 import StatusBadge from '../components/StatusBadge';
@@ -19,44 +20,92 @@ const Manga = ({ route, navigation }) => {
         cacheKey: cover.id,
     });
 
+    const [chapters, setChapters] = useState(ChapterService.getObject());
+
     // Change headerTitle to the title of the Manga
     useEffect(() => {
         navigation.setOptions({
             headerTitle: title,
         });
+
+        ChapterService.addState(setChapters);
+        ChapterService.loadChapters(id);
+
+        return () => {
+            ChapterService.removeState(setChapters);
+        }
     },[]);
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerRight: () => {
+                return chapters.isLoading ? <ActivityIndicator size="small" style={styles.activityIndicator}/> : null
+            }
+        });
+    }, [chapters.isLoading])
 
     return (
         <SafeAreaView style={styles.parentView}>
             <View style={styles.parentView}>
                 <Background />
+                <FlatList
+                    onScroll={scrollHandler}
+                    scrollEventThrottle={10}
+                    indicatorStyle={theme.dark ? 'white' : 'black'}
 
-                <ScrollView indicatorStyle={theme.dark ? 'white' : 'black'} onScroll={scrollHandler} scrollEventThrottle={10}>
-                    <View style={styles.header}>
-                        <View style={styles.cover}>
-                            <CachedImage style={styles.cover} source={{ uri: cover_uri }} cacheKey={cover.id} />
-                        </View>
-                        <View style={styles.info}>
-                            <HeaderInformation title="Author: " text={author.name || '-'} />
-                            <HeaderInformation title="Artist: " text={artist.name || '-'} />
-                            <HeaderInformation title="Type: " text={type} />
-                        </View>
-                    </View>
+                    ListHeaderComponent={() => {
+                        return (
+                            <>
+                                <View style={styles.header}>
+                                    <View style={styles.cover}>
+                                        <CachedImage style={styles.cover} source={{ uri: cover_uri }} cacheKey={cover.id} />
+                                    </View>
+                                    <View style={styles.info}>
+                                        <HeaderInformation title="Author: " text={author.name || '-'} />
+                                        <HeaderInformation title="Artist: " text={artist.name || '-'} />
+                                        <HeaderInformation title="Type: " text={type} />
+                                    </View>
+                                </View>
+                                <View style={styles.container}>
+                                    <StatusBadge status={status} />
+                                    <Text style={styles.title}>{title}</Text>
+                                    <Text style={styles.text}>{getUpdatedAt(updatedAt)}</Text>
 
-                    <View style={styles.container}>
-                        <StatusBadge status={status} />
-                        <Text style={styles.title}>{title}</Text>
-                        <Text style={styles.text}>{getUpdatedAt(updatedAt)}</Text>
+                                    <Text style={styles.subject}>Genres</Text>
+                                    <Text style={styles.text}>{genres}</Text>
 
-                        <Text style={styles.subject}>Genres</Text>
-                        <Text style={styles.text}>{genres}</Text>
+                                    <Text style={styles.subject}>Description</Text>
+                                    <ExpandableText style={styles.text} initialLines={5} text={description.trim()} />
 
-                        <Text style={styles.subject}>Description</Text>
-                        <ExpandableText style={styles.text} initialLines={5} text={description.trim()} />
-
-                        <Text style={styles.subject}>Chapters</Text>
-                    </View>
-                </ScrollView>
+                                    <Text style={styles.subject}>Chapters</Text>
+                                </View>
+                            </>
+                        );
+                    }}
+                    data={chapters.results}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({item}) => {
+                        return (
+                            <TouchableOpacity style={chapterCardStyles.container}>
+                                <View style={chapterCardStyles.top}>
+                                    <View style={chapterCardStyles.header}>
+                                        <Image style={chapterCardStyles.flag} source={require("../../assets/flags/en.png")}/>
+                                        <Text style={chapterCardStyles.title} numberOfLines={1} >Chapter {item.chapter}{item.volume ? " - Volume " + item.volume : null}</Text>
+                                    </View>
+                                    <Text style={chapterCardStyles.text} numberOfLines={1} >{item.title || "No title"}</Text>
+                                </View>
+                                <View style={chapterCardStyles.bottom}>
+                                    <Text style={chapterCardStyles.group} numberOfLines={1} >{item.group?.name || "No group name"}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    }}
+                    windowSize={7}
+                    ItemSeparatorComponent={() => <View style={{height: 15}}/>}
+                    getItemLayout={(data, index) => ({index, length: 101, offset: index * (101 + 15)})}
+                    onEndReached={ChapterService.loadMore}
+                    contentContainerStyle={{paddingBottom: 10}}
+                />
 
                 <View style={styles.footer}>
                     <View style={styles.row}>
@@ -81,6 +130,60 @@ const Manga = ({ route, navigation }) => {
         </SafeAreaView>
     );
 };
+
+const chapterCardStyles = StyleSheet.create({
+    top: {
+        paddingTop: 15,
+        paddingHorizontal: 15,
+        paddingBottom: 10,
+    },
+    bottom: {
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        backgroundColor: theme.colors.bar
+    },
+    container: {
+        justifyContent: "center",
+        marginHorizontal: 25,
+        backgroundColor: theme.colors.section,
+        borderRadius: 10,
+        flex: 1,
+        overflow: 'hidden'
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: "center",
+        marginBottom: 5
+    },
+    title: {
+        color: theme.colors.text,
+        textTransform: "capitalize",
+        overflow: "hidden",
+        fontWeight: '500',
+        fontSize: 14,
+    },
+    text: {
+        color: theme.colors.subtext,
+        fontWeight: '400',
+        fontSize: 14,
+    },
+    group: {
+        color: theme.colors.subtext,
+        fontWeight: '500',
+        fontSize: 14,
+    },
+    flag: {
+        width: 20,
+        height: 15,
+        marginRight: 5
+    },
+    line: {
+        height: 0.2,
+        opacity: 0.5,
+        backgroundColor: theme.colors.text,
+        marginVertical: 5,
+    }
+});
 
 const styles = StyleSheet.create({
     parentView: {
@@ -111,7 +214,8 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: theme.colors.background,
         margin: 0,
-        padding: 25,
+        paddingHorizontal: 25,
+        paddingTop: 25,
     },
 
     // Text
@@ -147,6 +251,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
+    activityIndicator: {
+        padding: 10
+    }
 });
 
 const getUpdatedAt = (timestamp) => {

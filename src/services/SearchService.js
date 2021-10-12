@@ -1,5 +1,4 @@
-import QueryString from 'qs';
-import MangaDex from '../api/MangaDex';
+import { createRequest, findIDByType } from './RequestService';
 
 const limit = 50;
 
@@ -29,7 +28,7 @@ function SearchService() {
                 order: title ? { relevance : 'desc'} : { followedCount : 'desc'}
             })
     
-            const data = await resolve_ids(format(response));
+            const data = await this.resolve_ids(this.format(response));
     
             this.results = data;
             this.pageEnd = data < limit;
@@ -53,7 +52,7 @@ function SearchService() {
                 order: this.title ? { relevance : 'desc'} : { followedCount : 'desc'}
             })
 
-            const data = await resolve_ids(format(response));
+            const data = await this.resolve_ids(this.format(response));
 
             this.results = [...this.results, ...data];
             this.pageEnd = data < limit;
@@ -88,136 +87,120 @@ function SearchService() {
             pageEnd: this.pageEnd
         }
     }
-}
 
-function format(array) {
-    const temp = [];
+    SearchService.prototype.format = (array) => {
+        const temp = [];
 
-    for (let i = 0; i < array.length; i++) {
-        const item = array[i];
-
-        const {id, type, attributes, relationships} = item;
-
-        const title = attributes.title.en || Object.values(attributes.title)[0];
-        const description = attributes.description.en || Object.values(attributes.description)[0];
-        const genres = attributes.tags.map(tag => tag.attributes.group == 'genre' ? tag.attributes.name.en : null).filter(i => i != null).join(', ');
-
-        const cover_id = findIDByType(relationships, "cover_art");
-        const author_id = findIDByType(relationships, "author");
-        const artist_id = findIDByType(relationships, "artist");
-
-        const data = {
-            id: id,
-            type: type,
-            title: title,
-            description: description,
-            status: attributes.status,
-            updatedAt: attributes.updatedAt,
-            genres: genres,
+        for (let i = 0; i < array.length; i++) {
+            const item = array[i];
+    
+            const {id, type, attributes, relationships} = item;
+    
+            const title = attributes.title.en || Object.values(attributes.title)[0];
+            const description = attributes.description.en || Object.values(attributes.description)[0];
+            const genres = attributes.tags.map(tag => tag.attributes.group == 'genre' ? tag.attributes.name.en : null).filter(i => i != null).join(', ');
+    
+            const cover_id = findIDByType(relationships, "cover_art");
+            const author_id = findIDByType(relationships, "author");
+            const artist_id = findIDByType(relationships, "artist");
+    
+            const data = {
+                id: id,
+                type: type,
+                title: title,
+                description: description,
+                status: attributes.status,
+                updatedAt: attributes.updatedAt,
+                genres: genres,
+            }
+    
+            if (cover_id) {
+                data = {...data, cover: {id: cover_id}};
+            }
+    
+            if (author_id) {
+                data = {...data, author: {id: author_id}};
+            }
+    
+            if (artist_id) {
+                data = {...data, artist: {id: artist_id}};
+            }
+    
+            temp.push(data);
         }
-
-        if (cover_id) {
-            data = {...data, cover: {id: cover_id}};
-        }
-
-        if (author_id) {
-            data = {...data, author: {id: author_id}};
-        }
-
-        if (artist_id) {
-            data = {...data, artist: {id: artist_id}};
-        }
-
-        temp.push(data);
+    
+        return temp;
     }
 
-    return temp;
-}
+    SearchService.prototype.resolve_ids = async (formatted_array) => {
+        const cover_ids = [];
+        const author_ids = [];
+        const artist_ids = [];
 
-async function resolve_ids(formatted_array) {
-    const cover_ids = [];
-    const author_ids = [];
-    const artist_ids = [];
+        for (let i = 0; i < formatted_array.length; i++) {
+            const item = formatted_array[i];
 
-    for (let i = 0; i < formatted_array.length; i++) {
-        const item = formatted_array[i];
+            if (item.cover) {
+                cover_ids.push(item.cover.id);
+            }
 
-        if (item.cover) {
-            cover_ids.push(item.cover.id);
+            if (item.author) {
+                author_ids.push(item.author.id);
+            }
+
+            if (item.artist) {
+                artist_ids.push(item.artist.id);
+            }
         }
 
-        if (item.author) {
-            author_ids.push(item.author.id);
+        const coverResponse = await createRequest('/cover', {
+            limit: limit,
+            ids: cover_ids,
+        });
+
+        for (let i = 0; i < coverResponse.length; i++) {
+            const cover = coverResponse[i];
+            for (let y = 0; y < formatted_array.length; y++) {
+                const item = formatted_array[y];
+                if (item["cover"] && cover.id == item["cover"]["id"]) {
+                    formatted_array[y]["cover"]["fileName"] = cover.attributes.fileName;
+                    break;
+                }            
+            }
         }
 
-        if (item.artist) {
-            artist_ids.push(item.artist.id);
+        const authorResponse = await createRequest('/author', {
+            limit: limit,
+            ids: author_ids,
+        });
+
+        for (let i = 0; i < authorResponse.length; i++) {
+            const author = authorResponse[i];
+            for (let y = 0; y < formatted_array.length; y++) {
+                const item = formatted_array[y];
+                if (item["author"] && author.id == item["author"]["id"]) {
+                    formatted_array[y]["author"]["name"] = author.attributes.name;
+                }            
+            }
         }
+
+        const artistResponse = await createRequest('/author', {
+            limit: limit,
+            ids: artist_ids,
+        });
+
+        for (let i = 0; i < artistResponse.length; i++) {
+            const artist = artistResponse[i];
+            for (let y = 0; y < formatted_array.length; y++) {
+                const item = formatted_array[y];
+                if (item["artist"] && artist.id == item["artist"]["id"]) {
+                    formatted_array[y]["artist"]["name"] = artist.attributes.name;
+                }            
+            }
+        }
+
+        return formatted_array;
     }
-
-    const coverResponse = await createRequest('/cover', {
-        limit: limit,
-        ids: cover_ids,
-    });
-
-    for (let i = 0; i < coverResponse.length; i++) {
-        const cover = coverResponse[i];
-        for (let y = 0; y < formatted_array.length; y++) {
-            const item = formatted_array[y];
-            if (item["cover"] && cover.id == item["cover"]["id"]) {
-                formatted_array[y]["cover"]["fileName"] = cover.attributes.fileName;
-                break;
-            }            
-        }
-    }
-
-    const authorResponse = await createRequest('/author', {
-        limit: limit,
-        ids: author_ids,
-    });
-
-    for (let i = 0; i < authorResponse.length; i++) {
-        const author = authorResponse[i];
-        for (let y = 0; y < formatted_array.length; y++) {
-            const item = formatted_array[y];
-            if (item["author"] && author.id == item["author"]["id"]) {
-                formatted_array[y]["author"]["name"] = author.attributes.name;
-            }            
-        }
-    }
-
-    const artistResponse = await createRequest('/author', {
-        limit: limit,
-        ids: artist_ids,
-    });
-
-    for (let i = 0; i < artistResponse.length; i++) {
-        const artist = artistResponse[i];
-        for (let y = 0; y < formatted_array.length; y++) {
-            const item = formatted_array[y];
-            if (item["artist"] && artist.id == item["artist"]["id"]) {
-                formatted_array[y]["artist"]["name"] = artist.attributes.name;
-            }            
-        }
-    }
-
-    return formatted_array;
-}
-
-async function createRequest(endpoint, params) {
-    const response = await MangaDex.get(endpoint, {
-        params: params,
-        paramsSerializer: params => {
-            return QueryString.stringify(params);
-        }
-    });
-
-    return response.data.data;
-}
-
-function findIDByType(object, type) {
-    const target = object.find(value => value.type == type);
-    return target?.id || null;
 }
 
 export default new SearchService();

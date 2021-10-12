@@ -9,6 +9,7 @@ const dark = {
         notification: "#000000",
 
         section: "#1f1f1f",
+        bar: "#121212",
 
         title: "#ffffff",
 
