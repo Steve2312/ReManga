@@ -3,7 +3,7 @@ import React from 'react';
 
 import Search from './src/screens/Search';
 import Library from './src/screens/Library';
-// import Manga from './src/screens/Manga';
+import Manga from './src/screens/Manga';
 // import Chapters from './src/screens/Chapters';
 
 import theme from './src/theme';
@@ -45,16 +45,16 @@ const Home = () => {
     );
 }
 
-// const MangaNavigator = () => {
-//     const Stack = createStackNavigator();
-//     return (
-//         <Stack.Navigator>
-//             <Stack.Screen name="Manga" component={Manga} options={{headerBackTitle: "Back"}}/>
-//             <Stack.Screen name="Chapters" component={Chapters} options={{headerBackTitle: "Back"}}/>
-//             <Stack.Screen name="MangaReader" component={Manga} options={{headerBackTitle: " "}}/>
-//         </Stack.Navigator>
-//     );
-// }
+const MangaNavigator = () => {
+    const Stack = createStackNavigator();
+    return (
+        <Stack.Navigator>
+            <Stack.Screen name="Manga" component={Manga} options={{headerBackTitle: "Back"}}/>
+            {/* <Stack.Screen name="Chapters" component={Chapters} options={{headerBackTitle: "Back"}}/>
+            <Stack.Screen name="MangaReader" component={Manga} options={{headerBackTitle: " "}}/> */}
+        </Stack.Navigator>
+    );
+}
 
 const App = () => {
     const Stack = createStackNavigator();
@@ -65,7 +65,7 @@ const App = () => {
             <NavigationContainer theme={theme}> 
                 <Stack.Navigator>
                     <Stack.Screen name="Home" component={Home} options={{headerShown: false}}/>
-                    {/* <Stack.Screen name="MangaNavigator" component={MangaNavigator} options={{headerShown: false}}/> */}
+                    <Stack.Screen name="MangaNavigator" component={MangaNavigator} options={{headerShown: false}}/>
                 </Stack.Navigator>
             </NavigationContainer>
         </>

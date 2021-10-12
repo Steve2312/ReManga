@@ -13,26 +13,55 @@ function SearchService() {
     this.pageEnd = false;
 
     this.offset = 0;
+
+    this.timeout = null;
     
-    SearchService.prototype.search = async title => {
+    SearchService.prototype.search = title => {
         this.isLoading = true;
         this.notify();
 
-        const response = await createRequest("/manga", {
-            title: title,
-            offset: 0,
-            limit: limit,
-            order: title ? { relevance : 'desc'} : { followedCount : 'desc'}
-        })
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(async () => {
+            const response = await createRequest("/manga", {
+                title: title,
+                offset: 0,
+                limit: limit,
+                order: title ? { relevance : 'desc'} : { followedCount : 'desc'}
+            })
+    
+            const data = await resolve_ids(format(response));
+    
+            this.results = data;
+            this.pageEnd = data < limit;
+            this.offset = this.results.length;
+            this.title = title;
+    
+            this.isLoading = false;
+            this.notify();
+        }, 500);
+    }
 
-        const data = await resolve_ids(format(response));
+    SearchService.prototype.loadMore = async () => {
+        if (!this.pageEnd && !this.isLoading) {
+            this.isLoading = true;
+            this.notify();
 
-        this.results = data;
-        this.pageEnd = this.results.length < limit;
-        this.offset = this.results.length;
+            const response = await createRequest("/manga", {
+                title: this.title,
+                offset: this.offset,
+                limit: limit,
+                order: this.title ? { relevance : 'desc'} : { followedCount : 'desc'}
+            })
 
-        this.isLoading = false;
-        this.notify();
+            const data = await resolve_ids(format(response));
+
+            this.results = [...this.results, ...data];
+            this.pageEnd = data < limit;
+            this.offset = this.results.length;
+
+            this.isLoading = false;
+            this.notify();
+        }
     }
 
     SearchService.prototype.addState = state => {
@@ -81,8 +110,9 @@ function format(array) {
             id: id,
             type: type,
             title: title,
-            // description: description,
+            description: description,
             status: attributes.status,
+            updatedAt: attributes.updatedAt,
             genres: genres,
         }
 
@@ -152,7 +182,6 @@ async function resolve_ids(formatted_array) {
             const item = formatted_array[y];
             if (item["author"] && author.id == item["author"]["id"]) {
                 formatted_array[y]["author"]["name"] = author.attributes.name;
-                break;
             }            
         }
     }
@@ -168,7 +197,6 @@ async function resolve_ids(formatted_array) {
             const item = formatted_array[y];
             if (item["artist"] && artist.id == item["artist"]["id"]) {
                 formatted_array[y]["artist"]["name"] = artist.attributes.name;
-                break;
             }            
         }
     }

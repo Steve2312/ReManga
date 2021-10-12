@@ -8,13 +8,13 @@ const dark = {
         border: "#121212",
         notification: "#000000",
 
-        section: "#1c1c1d",
+        section: "#1f1f1f",
 
         title: "#ffffff",
 
         subtext: "#d4d4d4",
 
-        shadow: "#000000"
+        shadow: "#000000",
     }
 };
 
