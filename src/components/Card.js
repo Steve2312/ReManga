@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
         height: 150,
         flexDirection: 'row',
         backgroundColor: theme.colors.section,
+        borderRadius: 5,
     },
     wrapper: {
         flex: 1,
