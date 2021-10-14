@@ -65,7 +65,6 @@ function ChapterService() {
 
         for (let i = 0; i < array.length; i++) {
             const item = array[i];
-
             const group_id = findIDByType(item.relationships, "scanlation_group");
             const user_id = findIDByType(item.relationships, "user");
             
@@ -75,6 +74,7 @@ function ChapterService() {
                 volume: item.attributes.volume,
                 chapter: item.attributes.chapter,
                 pages: item.attributes.data,
+                hash: item.attributes.hash
             }
 
             if (group_id) {

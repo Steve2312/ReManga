@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Image} from 'react-native';
+import { SafeAreaView, StyleSheet, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Share} from 'react-native';
 import MangaBackground from '../components/MangaBackground';
 import CachedImage from '../components/CachedImage';
 import Bookmark from '../components/Bookmark';
 import Button from '../components/Button';
 import ChapterService from '../services/ChapterService';
-
+import ChapterCard from '../components/ChapterCard';
 import theme from '../theme';
 import StatusBadge from '../components/StatusBadge';
 import ExpandableText from '../components/ExpandableText';
@@ -15,10 +15,7 @@ const Manga = ({ route, navigation }) => {
     const cover_uri = `https://uploads.mangadex.org/covers/${id}/${cover.fileName}.256.jpg`;
 
     // Background Component with scrollHandler for the Animation
-    const [Background, scrollHandler] = MangaBackground({
-        uri: cover_uri,
-        cacheKey: cover.id,
-    });
+    const [Background, scrollHandler] = MangaBackground({ uri: cover_uri, cacheKey: cover.id });
 
     const [chapters, setChapters] = useState(ChapterService.getObject());
 
@@ -43,6 +40,18 @@ const Manga = ({ route, navigation }) => {
             }
         });
     }, [chapters.isLoading])
+
+    function share() {
+        Share.share({
+            title: title,
+            message: "Check out " + title + " on MangaDex!",
+            url: 'https://mangadex.org/title/' + id,
+        });
+    }
+
+    function readChapter(chapter) {
+        navigation.navigate("MangaNavigator", {screen: "Read", params: {chapter: chapter}})
+    }
 
     return (
         <SafeAreaView style={styles.parentView}>
@@ -86,17 +95,8 @@ const Manga = ({ route, navigation }) => {
                     keyExtractor={(item) => item.id}
                     renderItem={({item}) => {
                         return (
-                            <TouchableOpacity style={chapterCardStyles.container}>
-                                <View style={chapterCardStyles.top}>
-                                    <View style={chapterCardStyles.header}>
-                                        <Image style={chapterCardStyles.flag} source={require("../../assets/flags/en.png")}/>
-                                        <Text style={chapterCardStyles.title} numberOfLines={1} >Chapter {item.chapter}{item.volume ? " - Volume " + item.volume : null}</Text>
-                                    </View>
-                                    <Text style={chapterCardStyles.text} numberOfLines={1} >{item.title || "No title"}</Text>
-                                </View>
-                                <View style={chapterCardStyles.bottom}>
-                                    <Text style={chapterCardStyles.group} numberOfLines={1} >{item.group?.name || "No group name"}</Text>
-                                </View>
+                            <TouchableOpacity onPress={() => readChapter(item)}>
+                                <ChapterCard item={item}/>
                             </TouchableOpacity>
                         );
                     }}
@@ -109,19 +109,11 @@ const Manga = ({ route, navigation }) => {
 
                 <View style={styles.footer}>
                     <View style={styles.row}>
-                        <Bookmark active />
+                        <Bookmark id={id} />
                         <View style={{ width: 10 }} />
-                        <Button
-                            title="Chapters"
-                            icon="ios-list"
-                            onPress={() => {
-                                navigation.navigate('Chapters', { id: id });
-                            }}
-                        />
+                        <Button title="Share" icon="ios-share-outline" onPress={share} />
                     </View>
-
                     <View style={{ height: 10 }} />
-
                     <View style={styles.row}>
                         <Button title="Read" icon="caret-forward" />
                     </View>
@@ -130,60 +122,6 @@ const Manga = ({ route, navigation }) => {
         </SafeAreaView>
     );
 };
-
-const chapterCardStyles = StyleSheet.create({
-    top: {
-        paddingTop: 15,
-        paddingHorizontal: 15,
-        paddingBottom: 10,
-    },
-    bottom: {
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        backgroundColor: theme.colors.bar
-    },
-    container: {
-        justifyContent: "center",
-        marginHorizontal: 25,
-        backgroundColor: theme.colors.section,
-        borderRadius: 10,
-        flex: 1,
-        overflow: 'hidden'
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: "center",
-        marginBottom: 5
-    },
-    title: {
-        color: theme.colors.text,
-        textTransform: "capitalize",
-        overflow: "hidden",
-        fontWeight: '500',
-        fontSize: 14,
-    },
-    text: {
-        color: theme.colors.subtext,
-        fontWeight: '400',
-        fontSize: 14,
-    },
-    group: {
-        color: theme.colors.subtext,
-        fontWeight: '500',
-        fontSize: 14,
-    },
-    flag: {
-        width: 20,
-        height: 15,
-        marginRight: 5
-    },
-    line: {
-        height: 0.2,
-        opacity: 0.5,
-        backgroundColor: theme.colors.text,
-        marginVertical: 5,
-    }
-});
 
 const styles = StyleSheet.create({
     parentView: {

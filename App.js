@@ -4,7 +4,7 @@ import React from 'react';
 import Search from './src/screens/Search';
 import Library from './src/screens/Library';
 import Manga from './src/screens/Manga';
-// import Chapters from './src/screens/Chapters';
+import Read from './src/screens/Read';
 
 import theme from './src/theme';
 
@@ -52,6 +52,7 @@ const MangaNavigator = () => {
             <Stack.Screen name="Manga" component={Manga} options={{headerBackTitle: "Back"}}/>
             {/* <Stack.Screen name="Chapters" component={Chapters} options={{headerBackTitle: "Back"}}/>
             <Stack.Screen name="MangaReader" component={Manga} options={{headerBackTitle: " "}}/> */}
+            <Stack.Screen name="Read" component={Read} options={{headerBackTitle: "Back"}}/>
         </Stack.Navigator>
     );
 }

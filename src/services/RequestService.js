@@ -16,3 +16,9 @@ export function findIDByType(object, type) {
     const target = object.find(value => value.type == type);
     return target?.id || null;
 }
+
+export async function requestBaseURL(chapterID) {
+    const response = await MangaDex.get("/at-home/server/" + chapterID);
+    const baseURL = response.data.baseUrl;
+    return baseURL;
+}

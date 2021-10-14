@@ -4,7 +4,7 @@ import { StyleSheet, View, Text } from "react-native";
 import CachedImage from "../components/CachedImage";
 import StatusBadge from "./StatusBadge";
 
-class Card extends React.Component {
+class Card extends React.PureComponent {
 
     constructor(props) {
         super(props);
