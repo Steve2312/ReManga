@@ -1,55 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Button } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableWithoutFeedback} from 'react-native';
+import Card from '../components/Card';
 import theme from '../theme';
+import BookmarkService from '../services/BookmarkService';
 
-const Library = () => {
-    const cacheURI = `${FileSystem.cacheDirectory}`;
-
-    const [cacheSize, setCacheSize] = useState(0);
-    useEffect(() => {
-        getCacheSize();
-        const listener = setInterval(() => {
-            getCacheSize();
-        }, 1000);
-
-        return () => clearInterval(listener);
-    }, []);
+function Library ({navigation}) {
+    const [bookmarks, setBookmarks] = useState(BookmarkService.getBookmarks());
 
     useEffect(() => {
-        console.log("Updated cache")
-    }, [cacheSize])
-
-    const getCacheSize = async () => {
-        const { size } = await FileSystem.getInfoAsync(cacheURI);
-        setCacheSize(size / 1000000);
-    }
-
-    const cleanupCache = async () => {
-        if (Platform.OS === 'ios') {
-            const cachedFiles = await FileSystem.readDirectoryAsync(cacheURI);
-            for (let index = 0; index < cachedFiles.length; index++) {
-                const element = cachedFiles[index];
-                await FileSystem.deleteAsync(`${cacheURI}${element}`)
-            }
-        }
-    }
-    const showCache = async () => {
-        const cachedFiles = await FileSystem.readDirectoryAsync(cacheURI);
-        console.log(cachedFiles)
-    }
+        BookmarkService.addState(setBookmarks);
+    },[]);
 
     return (
-        <View>
-            <Text style={{color: theme.colors.text}}>Cache size: {cacheSize} MB</Text>
-            <Button onPress={cleanupCache} title="Clear Cache"></Button>
-            <Button onPress={getCacheSize} title="Update Cache Size"></Button>
-            <Button onPress={showCache} title="showCache"></Button>
-        </View>
+        <>
+            <FlatList
+                indicatorStyle={theme.dark ? "white": "dark"}
+                data={bookmarks}
+                keyExtractor={item => item.id + item.title}
+                renderItem={({item}) => {
+                    return (
+                        <TouchableWithoutFeedback onPress={() => navigation.navigate("MangaNavigator", {screen: "Manga", params: {manga: item}})}>
+                            <View>
+                            <Card item={item} />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    );
+                }}
+                windowSize={5}
+                getItemLayout={(data, index) => ({index, length: 150, offset: index * (150 + 10)})}
+                ItemSeparatorComponent={() => <View style={{height: 10}}/>}
+                contentContainerStyle={styles.contentContainerStyle}
+            />
+        </>
     )
 }
 
 const styles = StyleSheet.create({
+    contentContainerStyle: {
+        padding: 10
+    },
+    activityIndicator: {
+        padding: 10
+    }
 });
 
 export default Library;

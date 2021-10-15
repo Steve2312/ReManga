@@ -109,7 +109,7 @@ const Manga = ({ route, navigation }) => {
 
                 <View style={styles.footer}>
                     <View style={styles.row}>
-                        <Bookmark id={id} />
+                        <Bookmark manga={route.params.manga} />
                         <View style={{ width: 10 }} />
                         <Button title="Share" icon="ios-share-outline" onPress={share} />
                     </View>

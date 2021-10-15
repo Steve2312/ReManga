@@ -1,10 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import Search from './src/screens/Search';
-import Library from './src/screens/Library';
+import Cache from './src/screens/Cache';
 import Manga from './src/screens/Manga';
 import Read from './src/screens/Read';
+import Library from './src/screens/Library';
 
 import theme from './src/theme';
 
@@ -12,6 +13,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { createStackNavigator } from '@react-navigation/stack';
+import BookmarkService from './src/services/BookmarkService';
 
 // Tab Navigator containing the Search and Library
 const Home = () => {
@@ -26,6 +28,8 @@ const Home = () => {
                             return focused ? 'ios-search' : 'ios-search-outline';
                         case 'Library':
                             return focused ? "ios-bookmark" : "ios-bookmark-outline";
+                        case 'Cache':
+                            return focused ? "ios-settings" : "ios-settings-outline";
                         case 'Settings':
                             return focused ? "ios-settings" : "ios-settings-outline";
                         default:
@@ -41,6 +45,7 @@ const Home = () => {
         <Tab.Navigator screenOptions={screenOptions}>
             <Tab.Screen name="Search" component={Search} options={{headerTitle: "ReManga"}}/>
             <Tab.Screen name="Library" component={Library} options={{headerTitle: "Library"}}/>
+            <Tab.Screen name="Cache" component={Cache} options={{headerTitle: "Cache"}}/>
         </Tab.Navigator>
     );
 }
@@ -59,6 +64,11 @@ const MangaNavigator = () => {
 
 const App = () => {
     const Stack = createStackNavigator();
+
+    useEffect(() => {
+        BookmarkService.loadService();
+    },[]);
+
     return (
         <>
             <StatusBar style="light" />
