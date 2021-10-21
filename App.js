@@ -14,6 +14,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { createStackNavigator } from '@react-navigation/stack';
 import BookmarkService from './src/services/BookmarkService';
+import HistoryService from './src/services/HistoryService';
 
 // Tab Navigator containing the Search and Library
 const Home = () => {
@@ -67,6 +68,7 @@ const App = () => {
 
     useEffect(() => {
         BookmarkService.loadService();
+        HistoryService.loadHistory();
     },[]);
 
     return (

@@ -6,24 +6,25 @@ import PropTypes from 'prop-types';
 const CachedImage = props => {
     const { source: { uri }, cacheKey} = props;
     const cacheURI = `${FileSystem.cacheDirectory}${cacheKey}`;
-    const [imageURI, setImageURI] = useState(cacheURI);
-
+    const [imageURI, setImageURI] = useState(null);
     const componentIsMounted = useRef(true);
 
     useEffect(() => {
+        const setImage = uri => {
+            if (componentIsMounted.current) {
+                setImageURI(uri);
+            }
+        }
+
         const loadImage = async (fileURI) => {
             const cacheDirectory = await FileSystem.getInfoAsync(fileURI);
             if (!cacheDirectory.exists) {
                 FileSystem.downloadAsync(uri, fileURI).then(() => {
-                    if (componentIsMounted.current) {
-                        setImageURI(null);
-                        setImageURI(fileURI);
-                    }
+                    setImage(fileURI);
                 });
+                setImage(uri);
             } else {
-                if (componentIsMounted.current) {
-                    setImageURI(uri);
-                }
+                setImage(cacheURI);
             }
         }
 

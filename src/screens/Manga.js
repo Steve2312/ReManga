@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Share} from 'react-native';
+import { SafeAreaView, StyleSheet, View, Text, FlatList, ActivityIndicator, TouchableOpacity, Share, ActionSheetIOS} from 'react-native';
 import MangaBackground from '../components/MangaBackground';
 import CachedImage from '../components/CachedImage';
 import Bookmark from '../components/Bookmark';
@@ -9,6 +9,8 @@ import ChapterCard from '../components/ChapterCard';
 import theme from '../theme';
 import StatusBadge from '../components/StatusBadge';
 import ExpandableText from '../components/ExpandableText';
+import HistoryService from '../services/HistoryService';
+
 
 const Manga = ({ route, navigation }) => {
     const { id, title, status, description, genres, type, artist, author, cover, updatedAt } = route.params.manga;
@@ -49,9 +51,32 @@ const Manga = ({ route, navigation }) => {
         });
     }
 
+
     function readChapter(chapter) {
+        HistoryService.addChapter(id, chapter.id);
         navigation.navigate("MangaNavigator", {screen: "Read", params: {chapter: chapter}})
     }
+
+    const openContextMenu = (chapter) => {
+        const hasRead = HistoryService.hasRead(id, chapter.id);
+        ActionSheetIOS.showActionSheetWithOptions(
+            {
+                options: ['Cancel', hasRead ? 'Mark unread' : 'Mark read'],
+                destructiveButtonIndex: hasRead ? 1 : null,
+                cancelButtonIndex: 0,
+                userInterfaceStyle: 'light'
+            }, 
+            (buttonIndex) => {
+                if (buttonIndex === 1) {
+                    if (!hasRead) {
+                        HistoryService.addChapter(id, chapter.id);
+                    } else {
+                        HistoryService.removeChapter(id, chapter.id);
+                    }
+                }
+            }
+        );
+    };
 
     return (
         <SafeAreaView style={styles.parentView}>
@@ -95,8 +120,8 @@ const Manga = ({ route, navigation }) => {
                     keyExtractor={(item) => item.id}
                     renderItem={({item}) => {
                         return (
-                            <TouchableOpacity onPress={() => readChapter(item)}>
-                                <ChapterCard item={item}/>
+                            <TouchableOpacity onPress={() => readChapter(item)} onLongPress={() => openContextMenu(item)}>
+                                <ChapterCard item={item} manga_id={id}/>
                             </TouchableOpacity>
                         );
                     }}

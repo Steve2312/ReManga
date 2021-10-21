@@ -17,7 +17,7 @@ function Page({ width, uri }) {
             }
         });
 
-        return () =>isMounted.current = false;
+        return () => isMounted.current = false;
     },[]);
 
     const styles = StyleSheet.create({
@@ -42,23 +42,23 @@ function Page({ width, uri }) {
 
     return (
         <>
-        <ActivityIndicator style={styles.activityIndicator} size="large" />
-        <ScrollView
-            style={styles.container}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            maximumZoomScale={2}
-            minimumZoomScale={1}
-            zoomScale={1}
-            bouncesZoom={true}
-            bounces={false}
-            centerContent={imageWidth && imageHeigth}
-        >
-            <Image
-                style={styles.image}
-                source={{uri: uri}}
-            />
-        </ScrollView>
+            <ActivityIndicator style={styles.activityIndicator} size="large" />
+            <ScrollView
+                style={styles.container}
+                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
+                maximumZoomScale={2}
+                minimumZoomScale={1}
+                zoomScale={1}
+                bouncesZoom={true}
+                bounces={false}
+                centerContent={imageWidth && imageHeigth}
+            >
+                <Image
+                    style={styles.image}
+                    source={{uri: uri}}
+                />
+            </ScrollView>
         </>
     );
 }

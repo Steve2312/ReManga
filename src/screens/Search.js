@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableWithoutFeedback} from 'react-native';
+import { View, FlatList, ActivityIndicator, StyleSheet, TouchableWithoutFeedback} from 'react-native';
 import Card from '../components/Card';
 import InputHeader from '../components/InputHeader';
 import SearchService from '../services/SearchService';
@@ -30,7 +30,6 @@ function Search ({navigation}) {
     return (
         <>
             <InputHeader callback={SearchService.search} />
-            {/* <Text style={{color: theme.colors.text}}>{JSON.stringify(state)}</Text> */}
             <FlatList
                 indicatorStyle={theme.dark ? "white": "dark"}
                 data={state.results}

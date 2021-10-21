@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const states = [];
 const bookmarks = [];
-const isLoaded = false;
+var isLoaded = false;
 
 const isBookmarked = (manga) => {
     return bookmarks.indexOf(manga) > -1;
@@ -31,12 +31,12 @@ const loadService = async () => {
             const values = JSON.parse(value);
             for (let i = 0; i < values.length; i++) {
                 bookmarks.push(values[i]);
-                
             }
-            return;
+        } else {
+            await storeData('bookmarks', []);
         }
 
-        await storeData('bookmarks', []);
+        isLoaded = true;
     }
 };
 

@@ -4,11 +4,12 @@ import Button from './Button';
 import BookmarkService from '../services/BookmarkService';
 
 const BookmarkButton = ({ manga }) => {
-    // if id in library...
+
     const [bookmarked, setBookmarked] = useState(BookmarkService.isBookmarked(manga));
 
     const bookmark = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        
         if (bookmarked) {
             BookmarkService.removeBookmark(manga);
         } else {

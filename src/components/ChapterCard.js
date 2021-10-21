@@ -1,30 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import theme from "../theme";
 import { StyleSheet, View, Text, Image } from "react-native";
+import HistoryService from "../services/HistoryService";
 
-class ChapterCard extends React.PureComponent {
+const ChapterCard = ({item, manga_id}) => {
 
-    constructor(props) {
-        super(props);
-        this.item = props.item;
-    }
+    const [history, setHistory] = useState(HistoryService.getObject());
 
-    render() {
-        return (
-            <View style={styles.container}>
-                <View style={styles.top}>
-                    <View style={styles.header}>
-                        <Image style={styles.flag} source={require("../../assets/flags/en.png")}/>
-                        <Text style={styles.title} numberOfLines={1} >Chapter {this.item.chapter}{this.item.volume ? " - Volume " + this.item.volume : null}</Text>
-                    </View>
-                    <Text style={styles.text} numberOfLines={1} >{this.item.title || "No title"}</Text>
+    useEffect(() => {
+        HistoryService.addState(setHistory);
+        
+        return () => {
+            HistoryService.removeState(setHistory);
+        }
+    }, []);
+
+    return (
+        <View style={styles.container}>
+            { HistoryService.hasRead(manga_id, item.id) ? <View style={styles.isRead}/> : null }
+            <View style={styles.top}>
+                <View style={styles.header}>
+                    <Image style={styles.flag} source={require("../../assets/flags/en.png")}/>
+                    <Text style={{...styles.title}} numberOfLines={1} >Chapter {item.chapter}{item.volume ? " - Volume " + item.volume : null}</Text>
                 </View>
-                <View style={styles.bottom}>
-                    <Text style={styles.group} numberOfLines={1} >{this.item.group?.name || "No group name"}</Text>
-                </View>
+                <Text style={styles.text} numberOfLines={1} >{item.title || "No title"}</Text>
             </View>
-        );
-    }
+            <View style={styles.bottom}>
+                <Text style={styles.group} numberOfLines={1} >{item.group?.name || "No group name"}</Text>
+            </View>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -78,6 +83,16 @@ const styles = StyleSheet.create({
         opacity: 0.5,
         backgroundColor: theme.colors.text,
         marginVertical: 5,
+    },
+    isRead: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: theme.colors.card,
+        zIndex: 100,
+        opacity: 0.5
     }
 });
 
