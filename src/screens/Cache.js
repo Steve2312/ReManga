@@ -46,9 +46,9 @@ const Cache = () => {
             <Text style={{color: theme.colors.text}}>Cache size: {cacheSize} MB</Text>
             <Button onPress={cleanupCache} title="Clear Cache"></Button>
             <Button onPress={getCacheSize} title="Update Cache Size"></Button>
-            <Button onPress={showCache} title="showCache"></Button>
-            <Button onPress={() => BookmarkService.clear()} title="delete Library"></Button>
-            <Button onPress={() => HistoryService.clear()} title="delete history"></Button>
+            <Button onPress={showCache} title="Log Cache Files"></Button>
+            <Button onPress={() => BookmarkService.clear()} title="Clear Bookmarks"></Button>
+            <Button onPress={() => HistoryService.clear()} title="Clear History"></Button>
         </View>
     )
 }

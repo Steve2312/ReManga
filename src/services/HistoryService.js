@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const history = {};
+var history = {};
 var isLoaded = false;
 const states = [];
 const storageKey = "history";
@@ -11,10 +11,11 @@ function addChapter(manga_id, chapter_id) {
             readChapters: []
         }
     }
-
-    history[manga_id].readChapters.push(chapter_id);
-    storeData(history);
-    notify();
+    if (!history[manga_id].readChapters.includes(chapter_id)) {
+        history[manga_id].readChapters.push(chapter_id);
+        storeData(history);
+        notify();
+    }
 }
 
 function removeChapter(manga_id, chapter_id) {
@@ -94,7 +95,8 @@ function getObject() {
 }
 
 async function clear() {
-    await storeData(storageKey, {});
+    await storeData({});
+    history = {};
     notify();
 }
 

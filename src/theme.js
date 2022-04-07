@@ -30,6 +30,7 @@ const grey = {
         notification: "#000000",
 
         section: "#2e2e2e",
+        bar: "#121212",
 
         title: "#ffffff",
 

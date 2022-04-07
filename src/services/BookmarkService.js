@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const states = [];
-const bookmarks = [];
+var bookmarks = [];
 var isLoaded = false;
 
 const isBookmarked = (manga) => {
@@ -80,6 +80,7 @@ const notify = () => {
 
 const clear = async () => {
     await storeData('bookmarks', []);
+    bookmarks = [];
     notify();
 }
 
